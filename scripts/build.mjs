@@ -1,0 +1,13 @@
+import {build} from 'esbuild';
+import {mkdir,copyFile} from 'node:fs/promises';
+import {execFileSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
+process.chdir(fileURLToPath(new URL('..',import.meta.url)));
+await mkdir('payload',{recursive:true});
+if(!process.argv.includes('--ui-only')) execFileSync('python3',['scripts/native.py'],{stdio:'inherit'});
+await build({entryPoints:['src/page.tsx'],outfile:'payload/page.js',bundle:true,minify:true,loader:{'.css':'text'},define:{'process.env.NODE_ENV':'"production"'}});
+for(const name of ['backend.py','guard.py']) await copyFile(`src/${name}`,`payload/${name}`);
+for(const name of ['LICENSE','LICENSE.integration','THIRD_PARTY_NOTICES.md','icon.png']) await copyFile(name,`payload/${name}`);
+for(const [source,target] of [['vendor/upstream/LICENSE','LICENSE.upstream'],['vendor/upstream/layer/LICENSE','LICENSE.vkbasalt'],['vendor/upstream/THIRD_PARTY.md','THIRD_PARTY.upstream.md'],['vendor/upstream/ORIGIN.json','UPSTREAM.json'],['node_modules/react/LICENSE','LICENSE.react'],['node_modules/react-dom/LICENSE','LICENSE.react-dom']]) await copyFile(source,`payload/${target}`);
+execFileSync('python3',['scripts/source.py'],{stdio:'inherit'});
+console.log('Built Framely payload. No SteamVR configuration changed.');

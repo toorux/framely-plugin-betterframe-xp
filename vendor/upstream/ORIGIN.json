@@ -1,0 +1,7 @@
+{
+  "repository": "https://github.com/omuomu0909/betterframe-xp",
+  "commit": "1e5bab4afe07835b559431e6b57671b5e080807e",
+  "version": "0.1.2",
+  "vendored": ["layer", "LICENSE", "THIRD_PARTY.md", "VERSION"],
+  "note": "Upstream files are unmodified. scripts/native.py applies namespacing and integration patches to build/native only."
+}

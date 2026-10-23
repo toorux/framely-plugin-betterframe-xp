@@ -1,0 +1,6 @@
+node_modules/
+build/
+payload/
+dist/
+__pycache__/
+*.pyc

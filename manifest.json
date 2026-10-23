@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "apiVersion": 1,
+  "id": "tooru.betterframe-xp",
+  "name": "BetterFrame XP",
+  "version": "0.1.0-preview.2",
+  "author": "tooru; upstream: omuomu0909",
+  "description": "Steam Frame 串流画面锐化、中心权重、去色带与颗粒，中日英三语设置。",
+  "details": "在头显端解码后通过 Vulkan Layer 处理 SteamVR 最终画面。设置在 Framely 内完成，支持跟随宿主语言、实时调节、左右比较与 GPU 耗时。首次启用及更新需下次启动 SteamVR，不会自动重启。实机画质与兼容性待验收。",
+  "tags": [
+    "画质",
+    "串流",
+    "锐化"
+  ],
+  "icon": "icon.png",
+  "backend": {
+    "entry": "backend.py",
+    "runAs": "steamos",
+    "autostart": true,
+    "restart": "on-failure",
+    "restartLimit": 3
+  },
+  "ui": {
+    "quickPage": "page.js",
+    "windows": {
+      "main": {
+        "entry": "page.js",
+        "title": "BetterFrame XP",
+        "dockIcon": true,
+        "width": 1280,
+        "height": 1000,
+        "widthMeters": 2.4
+      }
+    }
+  },
+  "exclusiveResources": [
+    "betterframe-xp.postfx"
+  ],
+  "lifecycle": {
+    "onStart": true,
+    "onStop": true,
+    "timeoutSeconds": 15,
+    "onCrashCleanup": {
+      "entry": "backend.py",
+      "args": [
+        "--cleanup"
+      ]
+    },
+    "onUninstall": {
+      "entry": "backend.py",
+      "args": [
+        "--uninstall"
+      ]
+    }
+  },
+  "files": {},
+  "changelog": "修复 systemd 忽略环境文件导致重启后渲染层仍未加载的问题；启用后核验 systemd 已接受配置。"
+}

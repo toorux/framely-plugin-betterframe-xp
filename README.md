@@ -2,7 +2,7 @@
 
 将 [omuomu0909/betterframe-xp](https://github.com/omuomu0909/betterframe-xp)
 移植为 Steam Frame 的 Framely 插件。插件 ID：`tooru.betterframe-xp`。
-当前版本：`0.1.0-preview.2`。本移植由 AI 编写，头显上的最终画质和兼容性待验收。
+当前版本：`0.1.0-preview.3`。本移植由 AI 编写，头显上的最终画质和兼容性待验收。
 
 原生渲染核心固定到上游 **0.1.2 / 1e5bab4afe07835b559431e6b57671b5e080807e**。
 保留 CAS、中心权重、去色带、颗粒、纹理权重与串流检测；独立 OpenVR 面板改为
@@ -10,10 +10,13 @@ Framely 设置页。支持 **中文 / 日本語 / English**，默认跟随 Frame
 
 ## 安装与使用
 
-需要 ARM64 Steam Frame、Python 3、Framely **0.8.3 或更新版本**。
+需要 ARM64 Steam Frame、Python 3 和支持插件 API v1 的 Framely。本插件不声明额外宿主版本范围。
+已在 Framely 0.8.3 上验证加载与实时控制；打包 CLI 固定版本与运行时最低版本分别管理。
+旧版 `preview.2` 的 `>=0.8.3` 声明会按 SemVer 排除 `0.8.4-preview.1` 等预览版，
+`preview.3` 已移除此不必要限制；商店刷新后选择新插件版本，无需降级 Framely。
 后端使用 `steamos` 用户，无需 root。安装后默认关闭画面处理。
 
-1. 将 `dist/tooru.betterframe-xp-0.1.0-preview.2.framely` 安装到 Framely。
+1. 将 `dist/tooru.betterframe-xp-0.1.0-preview.3.framely` 安装到 Framely。
 2. 如果装过原版 BetterFrame XP，先用原版的 `betterframectl off` 和
    `betterframectl disable` 停用，再在方便时重启 SteamVR。本插件检测到原版仍加载或启用时拒绝叠加处理。
 3. 打开插件，选择语言，启用“画面处理”。**首次启用需要下一次启动 SteamVR 才能加载渲染层**；插件不会自行重启 SteamVR。
@@ -116,8 +119,8 @@ FRAMELY_CLI=/path/to/framely npm run pack
 
    ```sh
    git push origin main
-   git tag v0.1.0-preview.2
-   git push origin v0.1.0-preview.2
+   git tag v0.1.0-preview.3
+   git push origin v0.1.0-preview.3
    ```
 
 4. tag 必须与清单版本完全一致。预览版本自动设置 GitHub prerelease；正式版本正常发布。

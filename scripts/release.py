@@ -36,9 +36,11 @@ def prepare():
                 output.write(f'{key}={str(value).lower() if isinstance(value, bool) else value}\n')
     build = ROOT / 'build'
     build.mkdir(exist_ok=True)
+    requirement = manifest.get('engines', {}).get('framely')
+    host = 'Framely ' + requirement if requirement else 'Framely API ' + str(manifest['apiVersion'])
     notes = f"""{manifest['changelog']}
 
-Steam Frame ARM64 / Framely {manifest['engines']['framely']} / runAs: steamos.
+Steam Frame ARM64 / {host} / runAs: steamos.
 
 - 中文 / 日本語 / English，默认跟随 Framely。
 - 安装后画面处理默认关闭；首次启用及更新渲染库后需重新启动 SteamVR，插件不会自动重启。

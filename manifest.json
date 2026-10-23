@@ -3,7 +3,7 @@
   "apiVersion": 1,
   "id": "tooru.betterframe-xp",
   "name": "BetterFrame XP",
-  "version": "0.1.0-preview.2",
+  "version": "0.1.0-preview.3",
   "author": "tooru; upstream: omuomu0909",
   "description": "Steam Frame 串流画面锐化、中心权重、去色带与颗粒，中日英三语设置。",
   "details": "在头显端解码后通过 Vulkan Layer 处理 SteamVR 最终画面。设置在 Framely 内完成，支持跟随宿主语言、实时调节、左右比较与 GPU 耗时。首次启用及更新需下次启动 SteamVR，不会自动重启。实机画质与兼容性待验收。",
@@ -54,11 +54,8 @@
     }
   },
   "files": {},
-  "changelog": "修复 systemd 忽略环境文件导致重启后渲染层仍未加载的问题；启用后核验 systemd 已接受配置。",
+  "changelog": "修复 Framely 0.8.4-preview.1 在插件库被误判为不兼容、无法安装的问题：移除不必要的 >=0.8.3 宿主版本限制，保留 API v1 协议校验。渲染算法和设置行为不变。",
   "homepage": "https://github.com/toorux/framely-plugin-betterframe-xp",
   "documentationUrl": "https://github.com/toorux/framely-plugin-betterframe-xp/blob/main/README.md",
-  "authorUrl": "https://github.com/toorux",
-  "engines": {
-    "framely": ">=0.8.3"
-  }
+  "authorUrl": "https://github.com/toorux"
 }

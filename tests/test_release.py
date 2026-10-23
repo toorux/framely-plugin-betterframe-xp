@@ -54,12 +54,22 @@ class ReleaseTests(unittest.TestCase):
                 archive.writestr('manifest.json', json.dumps(manifest))
                 archive.writestr(manifest['icon'], icon)
             content = (folder / name).read_bytes()
-            plugin = {key: manifest[key] for key in ('id', 'name', 'version', 'apiVersion', 'author', 'description', 'engines')}
+            plugin = {key: manifest[key] for key in ('id', 'name', 'version', 'apiVersion', 'author', 'description')}
+            if 'engines' in manifest:
+                plugin['engines'] = manifest['engines']
             plugin.update(asset=name, runAs='steamos', icon=image, size=len(content), sha256=hashlib.sha256(content).hexdigest())
             descriptor = {'schemaVersion': 1, 'plugins': [plugin]}
             (folder / image).write_bytes(icon)
             (folder / 'release.json').write_text(json.dumps(descriptor))
             release.verify_release(folder, manifest)
+            # A stale release.json must not reintroduce the host version gate
+            # removed from the source/package (including future preview hosts).
+            stale = copy.deepcopy(descriptor)
+            stale['plugins'][0]['engines'] = {'framely': '>=0.8.3'}
+            (folder / 'release.json').write_text(json.dumps(stale))
+            with self.assertRaisesRegex(ValueError, 'declaration mismatch: engines'):
+                release.verify_release(folder, manifest)
+            (folder / 'release.json').write_text(json.dumps(descriptor))
             (folder / image).write_bytes(b'wrong image')
             with self.assertRaisesRegex(ValueError, 'icon mismatch'):
                 release.verify_release(folder, manifest)
@@ -73,6 +83,13 @@ class ReleaseTests(unittest.TestCase):
             (folder / 'release.json').write_text(json.dumps(broken))
             with self.assertRaisesRegex(ValueError, 'runtime identity mismatch'):
                 release.verify_release(folder, manifest)
+
+    def test_plugin_does_not_require_the_packaging_cli_host_version(self):
+        manifest = json.loads((ROOT / 'manifest.json').read_text())
+        self.assertEqual(1, manifest['apiVersion'])
+        self.assertNotIn('engines', manifest)
+        self.assertNotIn('launch', manifest['ui'])
+        self.assertNotIn('launcherActions', manifest['ui'])
 
     def test_workflow_has_no_database_registration(self):
         workflow = (ROOT / '.github/workflows/release.yml').read_text()

@@ -11,7 +11,9 @@
     "test:ui": "node tests/ui-smoke.mjs",
     "test:vulkan": "python3 tests/vulkan_smoke.py",
     "dev": "node scripts/preview.mjs",
-    "pack": "python3 scripts/pack.py"
+    "pack": "python3 scripts/pack.py",
+    "release:prepare": "python3 scripts/release.py prepare",
+    "release:assets": "python3 scripts/release.py assemble"
   },
   "dependencies": {"@framely/sdk": "file:vendor/framely-sdk", "react": "19.2.0", "react-dom": "19.2.0"},
   "devDependencies": {"@types/react": "19.2.0", "@types/react-dom": "19.2.0", "esbuild": "0.25.10", "typescript": "5.9.3"}

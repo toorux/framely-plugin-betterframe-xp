@@ -10,7 +10,7 @@ Framely 设置页。支持 **中文 / 日本語 / English**，默认跟随 Frame
 
 ## 安装与使用
 
-需要 ARM64 Steam Frame、Python 3、支持用户身份和生命周期钩子的 Framely（本工作区 0.4 接口）。
+需要 ARM64 Steam Frame、Python 3、Framely **0.8.3 或更新版本**。
 后端使用 `steamos` 用户，无需 root。安装后默认关闭画面处理。
 
 1. 将 `dist/tooru.betterframe-xp-0.1.0-preview.2.framely` 安装到 Framely。
@@ -103,6 +103,43 @@ FRAMELY_CLI=/path/to/framely npm run pack
 `scripts/native.py` 在 `build/native` 生成隔离命名的构建副本；`vendor/upstream` 保持原始内容。
 构建不会安装 Vulkan 清单。打包会校验 ARM64 ELF 和完整载荷集合，再调用 Framely 自身的 pack/verify。
 输出包、`SHA256SUMS` 和校验结果放在 `dist/`；具体测试记录见 [VALIDATION.md](VALIDATION.md)。
+
+## GitHub Actions 与 topic 自动发现
+
+发布不依赖 database、submodule 登记或 `DATABASE_TOKEN`。遵循 Framely 最新的
+[GitHub 插件发现规范](https://github.com/SteamFramelyHomebrew/framely/blob/main/docs/github-plugin-discovery.md)：
+
+1. 仓库保持公开、非 fork、未归档，并在 GitHub 仓库 About → Topics 添加 **`framely-plugin`**。
+2. `.github/workflows/release.yml` 在 main 推送、PR、手动运行时构建 ARM64 插件，执行类型检查、后端和三语测试、
+   实际 headless Vulkan 渲染测试，上传 Actions 构建产物。普通分支构建不会创建 Release。
+3. 发布时同步 `manifest.json`、`package.json` 和 `package-lock.json` 的版本，提交后推送同名 `v<version>` 标签：
+
+   ```sh
+   git push origin main
+   git tag v0.1.0-preview.2
+   git push origin v0.1.0-preview.2
+   ```
+
+4. tag 必须与清单版本完全一致。预览版本自动设置 GitHub prerelease；正式版本正常发布。
+5. CI 从 `scripts/framely-toolchain.json` 固定的官方源码提交构建 CLI，生成包含固定版本 `downloadUrl` 的临时清单，
+   打包并校验最终 `.framely`。源码清单不手写整包哈希或下载地址。
+6. 使用官方 `framely release-json` 从最终包生成 `release.json`，导出包内图标，并检查 ID、版本、
+   `runAs`、Framely 版本要求、整包字节数和 SHA256。之后不再修改安装包。
+7. 发行目录 `dist/release/` 包含 `.framely`、`release.json`、导出图标和 `SHA256SUMS`，全部上传到同一个 Release。
+   先建立带完整附件的草稿，再发布；同 tag 的现存 Release 不覆盖。失败的草稿也需人工检查，不自动删除。
+
+仅使用仓库内置 `GITHUB_TOKEN`；build 任务只读，release 任务才授予 `contents: write`。
+首次设置 topic 需要仓库维护权限，工作流不会申请管理员 token。更新 Framely 打包工具时，审查官方发现规范后
+更新 `scripts/framely-toolchain.json` 的固定提交；无需下载完整 CEF 或在 CI 启动 SteamVR。
+
+本地生成相同的发现附件：先运行构建和打包，再指定支持 `release-json` 的新版 CLI：
+
+```sh
+FRAMELY_CLI=/path/to/new/framely npm run release:assets
+```
+
+发行目录必须为空，每个 ID 只放一个最终包。Framely 自动发现读取的是 **Release 附件** `release.json`，
+不是默认分支里的文件；只有推送源码、没有公开 Release 时，插件还不会出现在发现列表中。
 
 ## 许可与源码
 

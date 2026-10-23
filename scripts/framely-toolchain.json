@@ -1,0 +1,6 @@
+{
+  "repository": "SteamFramelyHomebrew/framely",
+  "ref": "cea24afbc9e4e821df1d711201ea757eaee1062d",
+  "version": "0.8.3",
+  "reason": "Pinned current main with GitHub topic discovery and release-json generator; update after reviewing discovery schema and CLI changes."
+}

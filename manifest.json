@@ -54,5 +54,11 @@
     }
   },
   "files": {},
-  "changelog": "修复 systemd 忽略环境文件导致重启后渲染层仍未加载的问题；启用后核验 systemd 已接受配置。"
+  "changelog": "修复 systemd 忽略环境文件导致重启后渲染层仍未加载的问题；启用后核验 systemd 已接受配置。",
+  "homepage": "https://github.com/toorux/framely-plugin-betterframe-xp",
+  "documentationUrl": "https://github.com/toorux/framely-plugin-betterframe-xp/blob/main/README.md",
+  "authorUrl": "https://github.com/toorux",
+  "engines": {
+    "framely": ">=0.8.3"
+  }
 }

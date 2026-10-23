@@ -1,0 +1,124 @@
+name: Build and release plugin
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: betterframe-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 45
+    outputs:
+      tag: ${{ steps.metadata.outputs.tag }}
+      prerelease: ${{ steps.metadata.outputs.prerelease }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - name: Validate version and prepare release notes
+        id: metadata
+        run: python3 scripts/release.py prepare
+      - name: Read pinned Framely toolchain
+        id: toolchain
+        run: |
+          python3 - <<'PY'
+          import json, os
+          config = json.load(open('scripts/framely-toolchain.json'))
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              output.write('ref=' + config['ref'] + '\n')
+          PY
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: SteamFramelyHomebrew/framely
+          ref: ${{ steps.toolchain.outputs.ref }}
+          path: build/framely
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install native dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y g++ pkg-config libssl-dev libvulkan-dev glslang-tools mesa-vulkan-drivers vulkan-tools
+      - name: Install JavaScript dependencies
+        run: npm ci
+      - name: Validate and test
+        run: |
+          npm run typecheck
+          npm test
+      - name: Build pinned Framely packaging CLI
+        run: |
+          cargo build --release --locked --manifest-path build/framely/Cargo.toml --target-dir build/framely-target
+          echo "FRAMELY_CLI=$PWD/build/framely-target/release/framely" >> "$GITHUB_ENV"
+      - name: Build native layer and plugin page
+        run: npm run build
+      - name: Exercise real Vulkan render and bypass paths
+        env:
+          VK_ICD_FILENAMES: /usr/share/vulkan/icd.d/lvp_icd.aarch64.json
+        run: |
+          # Mesa's ICD filename varies between distributions.
+          if [[ ! -f "$VK_ICD_FILENAMES" ]]; then
+            export VK_ICD_FILENAMES=/usr/share/vulkan/icd.d/lvp_icd.json
+          fi
+          npm run test:vulkan
+      - name: Package and generate GitHub discovery assets
+        run: |
+          npm run pack
+          python3 scripts/release.py assemble
+          cd dist/release
+          sha256sum --check SHA256SUMS
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
+        with:
+          name: betterframe-xp-arm64
+          path: |
+            dist/release/*
+            dist/verification.json
+            build/release-notes.md
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
+        with:
+          name: betterframe-xp-arm64
+      - name: Publish immutable version assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ needs.build.outputs.tag }}
+          PRERELEASE: ${{ needs.build.outputs.prerelease }}
+        run: |
+          set -euo pipefail
+          cd dist/release
+          sha256sum --check SHA256SUMS
+          cd ../..
+          # Never overwrite an existing Release or replace its package bytes.
+          gh api "repos/$GH_REPO/releases?per_page=100" > existing-releases.json
+          python3 - <<'PY'
+          import json, os
+          releases = json.load(open('existing-releases.json'))
+          if any(item['tag_name'] == os.environ['RELEASE_TAG'] for item in releases):
+              raise SystemExit('Release already exists; publish a new version instead')
+          PY
+          args=(--draft --verify-tag --title "$RELEASE_TAG" --notes-file build/release-notes.md)
+          if [[ "$PRERELEASE" == true ]]; then args+=(--prerelease); fi
+          gh release create "$RELEASE_TAG" dist/release/* "${args[@]}"
+          gh release edit "$RELEASE_TAG" --draft=false

@@ -7,9 +7,9 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 FILES = ['manifest.json', 'package.json', 'package-lock.json', 'tsconfig.json',
          'LICENSE', 'LICENSE.integration', 'THIRD_PARTY_NOTICES.md', 'README.md',
-         'VALIDATION.md', 'icon.png', '.gitignore']
+         'VALIDATION.md', 'DEVICE-VALIDATION.md', 'icon.png', '.gitignore']
 paths = [ROOT / name for name in FILES]
-for folder in ('src', 'scripts', 'tests', 'vendor'):
+for folder in ('src', 'scripts', 'tests', 'vendor', '.github'):
     paths += [p for p in (ROOT / folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts and p.suffix != '.pyc']
 with zipfile.ZipFile(ROOT / 'payload/source.zip', 'w', compression=zipfile.ZIP_DEFLATED) as archive:
     for path in sorted(paths):

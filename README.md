@@ -110,8 +110,8 @@ FRAMELY_CLI=/path/to/framely npm run pack
 [GitHub 插件发现规范](https://github.com/SteamFramelyHomebrew/framely/blob/main/docs/github-plugin-discovery.md)：
 
 1. 仓库保持公开、非 fork、未归档，并在 GitHub 仓库 About → Topics 添加 **`framely-plugin`**。
-2. `.github/workflows/release.yml` 在 main 推送、PR、手动运行时构建 ARM64 插件，执行类型检查、后端和三语测试、
-   实际 headless Vulkan 渲染测试，上传 Actions 构建产物。普通分支构建不会创建 Release。
+2. `.github/workflows/release.yml` 仅在推送 `v*` 版本标签时构建 ARM64 插件，执行类型检查、后端和三语测试、
+   实际 headless Vulkan 渲染测试，上传 Actions 构建产物并创建 Release。分支推送和 PR 不触发构建。
 3. 发布时同步 `manifest.json`、`package.json` 和 `package-lock.json` 的版本，提交后推送同名 `v<version>` 标签：
 
    ```sh
